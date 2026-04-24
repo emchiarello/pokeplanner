@@ -1,0 +1,1 @@
+cd planner && npx lint-staged && npx tsc -b && npm run build
