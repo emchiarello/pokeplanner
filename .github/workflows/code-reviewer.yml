@@ -20,7 +20,6 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Diff holen
           DIFF=$(git diff origin/${{ github.base_ref }}...origin/${{ github.head_ref }} | head -c 15000)
           
           if [ -z "$DIFF" ]; then
@@ -28,14 +27,12 @@ jobs:
             exit 0
           fi
           
-          # 2. Skill-Datei einlesen
           SKILLS=$(cat .agents/skills/code-reviewer/SKILL.md)
-          
-          # 3. Prompt bauen
           PROMPT="Du bist ein Code Reviewer. Regeln: $SKILLS. Reviewe diesen Diff: $DIFF"
           
-          # 4. API Call - Wir nutzen jetzt dein verfügbares Modell gemini-2.0-flash
-          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=$GEMINI_API_KEY" \
+          # Wir nutzen v1beta UND das Modell gemini-1.5-flash
+          # Das ist das Standardmodell für den Free Tier ohne Kosten.
+          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GEMINI_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
               \"contents\": [{
@@ -43,14 +40,13 @@ jobs:
               }]
             }")
           
-          # 5. Antwort extrahieren
           REVIEW_TEXT=$(echo $RESPONSE | jq -r '.candidates[0].content.parts[0].text // empty')
           
-          # 6. Kommentar posten
           if [ -n "$REVIEW_TEXT" ] && [ "$REVIEW_TEXT" != "null" ]; then
-            gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review (Gemini 2.0)
+            gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review (Gemini 1.5)
             $REVIEW_TEXT"
           else
-            echo "Fehler bei der API Antwort: $RESPONSE"
+            echo "API Fehler Log: $RESPONSE"
+            # Falls 1.5 auch 0-Limit hat, versuchen wir es als letzten Notnagel mit gemini-pro
             exit 1
           fi
