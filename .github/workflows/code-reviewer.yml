@@ -1,7 +1,7 @@
 name: AI Code Reviewer
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize]
 
 jobs:
   pr_agent_job:
