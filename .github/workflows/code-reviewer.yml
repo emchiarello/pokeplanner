@@ -18,4 +18,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "@copilot /code-review-specialist review this PR using my SKILL.md"
+          gh pr edit ${{ github.event.pull_request.number }} --add-reviewer "github-copilot[bot]"
