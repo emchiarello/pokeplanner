@@ -1,22 +1,26 @@
 name: code-reviewer.yml
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
+    types: [opened, synchronize, reopened]
 
 jobs:
-  review:
+  pr_agent_job:
     runs-on: ubuntu-latest
     permissions:
+      issues: write
       pull-requests: write
-      contents: read
+      contents: parse
+    name: Run PR Agent
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Request Copilot Review
+      - name: PR Agent Action
+        uses: Codium-ai/pr-agent@main
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} --add-reviewer "copilot-pull-request-reviewer[bot]"
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_REVIEWER.EXTRA_INSTRUCTIONS: "Follow the rules defined in .agents/skills/code-reviewer/SKILL.md"
+          CONFIG.MODEL: "gpt-4o"
