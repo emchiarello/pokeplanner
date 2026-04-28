@@ -15,36 +15,42 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Gemini Review
+      - name: Groq Review
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 1. Unterschiede im Code holen
           DIFF=$(git diff origin/${{ github.base_ref }}...origin/${{ github.head_ref }} | head -c 15000)
           
           if [ -z "$DIFF" ]; then
             echo "Keine Änderungen gefunden."
             exit 0
           fi
-          
+
+          # 2. Skill-Datei einlesen
           SKILLS=$(cat .agents/skills/code-reviewer/SKILL.md)
-          PROMPT="Du bist ein Code Reviewer. Regeln: $SKILLS. Reviewe diesen Diff: $DIFF"
-          
-          # Versuch mit Gemini 1.5 Pro (v1)
-          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=$GEMINI_API_KEY" \
+
+          # 3. Anfrage an Groq (Modell: Llama 3.3 70B - extrem stark und kostenlos)
+          RESPONSE=$(curl -X POST "https://api.groq.com/openai/v1/chat/completions" \
+            -H "Authorization: Bearer $GROQ_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
-              \"contents\": [{
-                \"parts\":[{\"text\": $(echo "$PROMPT" | jq -aRs .)}]
-              }]
+              \"model\": \"llama-3.3-70b-versatile\",
+              \"messages\": [
+                {\"role\": \"system\", \"content\": $(echo "Du bist ein erfahrener Code Reviewer. Deine Regeln: $SKILLS" | jq -aRs .)},
+                {\"role\": \"user\", \"content\": $(echo "Reviewe diesen Code-Diff:\n\n$DIFF" | jq -aRs .)}
+              ]
             }")
-          
-          REVIEW_TEXT=$(echo $RESPONSE | jq -r '.candidates[0].content.parts[0].text // empty')
-          
+
+          # 4. Antwort extrahieren
+          REVIEW_TEXT=$(echo $RESPONSE | jq -r '.choices[0].message.content // empty')
+
+          # 5. Kommentar im PR posten
           if [ -n "$REVIEW_TEXT" ] && [ "$REVIEW_TEXT" != "null" ]; then
-            gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review (Gemini Pro)
+            gh pr comment ${{ github.event.pull_request.number }} --body "### 🚀 Groq AI Code Review (Llama 3.3)
             $REVIEW_TEXT"
           else
-            echo "API Fehler Log: $RESPONSE"
+            echo "Fehler bei Groq API: $RESPONSE"
             exit 1
           fi
