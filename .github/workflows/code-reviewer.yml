@@ -21,6 +21,7 @@ jobs:
         uses: Codium-ai/pr-agent@main
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_REVIEWER.EXTRA_INSTRUCTIONS: "Follow the rules defined in .agents/skills/code-reviewer/SKILL.md"
           CONFIG.MODEL: "gpt-4o"
