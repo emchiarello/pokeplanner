@@ -7,7 +7,13 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Request Copilot Review
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
