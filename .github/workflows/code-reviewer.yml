@@ -23,7 +23,20 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTION__AUTO_REVIEW: "true"
+          GITHUB_ACTION__AUTO_REVIEW: "false"
           GITHUB_ACTION__PR_COMMANDS: '["/review", "/describe"]'
           PR_REVIEWER__EXTRA_INSTRUCTIONS: "Follow the rules defined in .agents/skills/code-reviewer/SKILL.md"
           CONFIG.MODEL: "gpt-4o"
+          run: |
+            export OPENAI_KEY=${{ secrets.OPENAI_API_KEY }}
+            export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            
+            pip install git+https://github.com/Codium-ai/pr-agent.git
+            
+            pr-agent --pr_url ${{ github.event.pull_request.html_url }} review \
+            --pr_reviewer.extra_instructions="Follow .agents/skills/code-reviewer/SKILL.md" > review.txt
+            
+            echo "REVIEW_RESULT<<EOF" >> $GITHUB_ENV
+            cat review.txt >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+
