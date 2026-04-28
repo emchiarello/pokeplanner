@@ -30,9 +30,8 @@ jobs:
           SKILLS=$(cat .agents/skills/code-reviewer/SKILL.md)
           PROMPT="Du bist ein Code Reviewer. Regeln: $SKILLS. Reviewe diesen Diff: $DIFF"
           
-          # Wir nutzen v1beta UND das Modell gemini-1.5-flash
-          # Das ist das Standardmodell für den Free Tier ohne Kosten.
-          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GEMINI_API_KEY" \
+          # Versuch mit Gemini 1.5 Pro (v1)
+          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=$GEMINI_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
               \"contents\": [{
@@ -43,10 +42,9 @@ jobs:
           REVIEW_TEXT=$(echo $RESPONSE | jq -r '.candidates[0].content.parts[0].text // empty')
           
           if [ -n "$REVIEW_TEXT" ] && [ "$REVIEW_TEXT" != "null" ]; then
-            gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review (Gemini 1.5)
+            gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review (Gemini Pro)
             $REVIEW_TEXT"
           else
             echo "API Fehler Log: $RESPONSE"
-            # Falls 1.5 auch 0-Limit hat, versuchen wir es als letzten Notnagel mit gemini-pro
             exit 1
           fi
