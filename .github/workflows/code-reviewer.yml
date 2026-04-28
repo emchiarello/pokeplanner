@@ -23,7 +23,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTION.AUTO_REVIEW: "true"
-          GITHUB_ACTION.PR_COMMANDS: '["/review", "/describe"]'
-          PR_REVIEWER.EXTRA_INSTRUCTIONS: "Follow the rules defined in .agents/skills/code-reviewer/SKILL.md"
+          GITHUB_ACTION__AUTO_REVIEW: "true"
+          GITHUB_ACTION__PR_COMMANDS: '["/review", "/describe"]'
+          PR_REVIEWER__EXTRA_INSTRUCTIONS: "Follow the rules defined in .agents/skills/code-reviewer/SKILL.md"
           CONFIG.MODEL: "gpt-4o"
