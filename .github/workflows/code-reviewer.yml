@@ -39,4 +39,14 @@ jobs:
             echo "REVIEW_RESULT<<EOF" >> $GITHUB_ENV
             cat review.txt >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
+            
+      - name: Post Custom Comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Jetzt nutzen wir deinen gewünschten Befehl
+          # Wir formatieren den Text noch etwas (optional)
+          gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review
+          
+          $REVIEW_RESULT"
 
