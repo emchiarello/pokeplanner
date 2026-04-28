@@ -9,7 +9,7 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
-      contents: parse
+      contents: read
     name: Run PR Agent
     steps:
       - name: Checkout Code
