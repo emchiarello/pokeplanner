@@ -4,49 +4,48 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  pr_agent_job:
+  review:
     runs-on: ubuntu-latest
     permissions:
-      issues: write
       pull-requests: write
       contents: read
-    name: Run PR Agent
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: PR Agent Action
-        uses: Codium-ai/pr-agent@main
+      - name: Gemini Review
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTION__AUTO_REVIEW: "false"
-          GITHUB_ACTION__PR_COMMANDS: '["/review", "/describe"]'
-          PR_REVIEWER__EXTRA_INSTRUCTIONS: "Follow the rules defined in .agents/skills/code-reviewer/SKILL.md"
-          CONFIG.MODEL: "gpt-4o"
-          run: |
-            export OPENAI_KEY=${{ secrets.OPENAI_API_KEY }}
-            export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-            
-            pip install git+https://github.com/Codium-ai/pr-agent.git
-            
-            pr-agent --pr_url ${{ github.event.pull_request.html_url }} review \
-            --pr_reviewer.extra_instructions="Follow .agents/skills/code-reviewer/SKILL.md" > review.txt
-            
-            echo "REVIEW_RESULT<<EOF" >> $GITHUB_ENV
-            cat review.txt >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-            
-      - name: Post Custom Comment
-        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Jetzt nutzen wir deinen gewünschten Befehl
-          # Wir formatieren den Text noch etwas (optional)
-          gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review
+          # 1. Unterschiede im Code holen
+          DIFF=$(git diff origin/${{ github.base_ref }}...origin/${{ github.head_ref }} | head -c 15000)
           
-          $REVIEW_RESULT"
+          # 2. Skill-Datei einlesen
+          SKILLS=$(cat .agents/skills/code-reviewer/SKILL.md)
 
+          # 3. Prompt zusammenbauen
+          PROMPT="Du bist ein Code Reviewer. Halte dich strikt an diese Regeln:\n$SKILLS\n\nHier ist der Code-Diff zum Reviewen:\n$DIFF"
+
+          # 4. Anfrage an die kostenlose Gemini API (wir nutzen jq zum Erstellen des JSON)
+          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GEMINI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"contents\": [{
+                \"parts\":[{\"text\": $(echo "$PROMPT" | jq -aRs .)}]
+              }]
+            }")
+
+          # 5. Antwort extrahieren
+          REVIEW_TEXT=$(echo $RESPONSE | jq -r '.candidates[0].content.parts[0].text')
+
+          # 6. Kommentar im PR posten
+          if [ "$REVIEW_TEXT" != "null" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 Kostenloser KI-Review (Gemini)
+            $REVIEW_TEXT"
+          else
+            echo "Fehler bei der API: $RESPONSE"
+            exit 1
+          fi
