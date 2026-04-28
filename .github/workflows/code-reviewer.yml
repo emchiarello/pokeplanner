@@ -1,4 +1,4 @@
-name: code-reviewer.yml
+name: AI Code Reviewer
 on:
   pull_request:
     types: [opened, synchronize, reopened]
