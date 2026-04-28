@@ -1,0 +1,15 @@
+name: code-reviewer.yml
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request Copilot Review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "@copilot /code-review-specialist review this PR using my SKILL.md"
