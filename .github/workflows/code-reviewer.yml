@@ -20,23 +20,22 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Unterschiede im Code holen (begrenzt auf die ersten 15k Zeichen)
+          # 1. Diff holen
           DIFF=$(git diff origin/${{ github.base_ref }}...origin/${{ github.head_ref }} | head -c 15000)
           
           if [ -z "$DIFF" ]; then
-            echo "Keine Code-Änderungen gefunden."
+            echo "Keine Änderungen gefunden."
             exit 0
           fi
           
           # 2. Skill-Datei einlesen
           SKILLS=$(cat .agents/skills/code-reviewer/SKILL.md)
           
-          # 3. Prompt zusammenbauen
-          PROMPT="Du bist ein Code Reviewer. Halte dich strikt an diese Regeln: $SKILLS. Hier ist der Code-Diff zum Reviewen: $DIFF"
+          # 3. Prompt bauen
+          PROMPT="Du bist ein Code Reviewer. Regeln: $SKILLS. Reviewe diesen Diff: $DIFF"
           
-          # 4. Anfrage an die Gemini API (v1 statt v1beta)
-          # Das Modell heißt oft einfach 'gemini-1.5-flash' ohne Pfad-Präfix
-          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=$GEMINI_API_KEY" \
+          # 4. API Call mit dem "Latest" Modellnamen und v1beta (v1beta ist für Flash oft stabiler)
+          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$GEMINI_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
               \"contents\": [{
@@ -44,14 +43,14 @@ jobs:
               }]
             }")
           
-          # 5. Antwort extrahieren
+          # 5. Antwort prüfen und extrahieren
           REVIEW_TEXT=$(echo $RESPONSE | jq -r '.candidates[0].content.parts[0].text // empty')
           
-          # 6. Kommentar im PR posten
+          # 6. Kommentar posten
           if [ -n "$REVIEW_TEXT" ] && [ "$REVIEW_TEXT" != "null" ]; then
-            gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review (Gemini Free)
+            gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review
             $REVIEW_TEXT"
           else
-            echo "Fehler bei der API Antwort: $RESPONSE"
+            echo "API Fehler Log: $RESPONSE"
             exit 1
           fi
