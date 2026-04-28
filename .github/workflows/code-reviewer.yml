@@ -34,8 +34,9 @@ jobs:
           # 3. Prompt bauen
           PROMPT="Du bist ein Code Reviewer. Regeln: $SKILLS. Reviewe diesen Diff: $DIFF"
           
-          # 4. API Call mit dem "Latest" Modellnamen und v1beta (v1beta ist für Flash oft stabiler)
-          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$GEMINI_API_KEY" \
+          # 4. API Call - Wir probieren den stabilsten Namen: gemini-1.5-flash (ohne -latest)
+          # Und wir nutzen den v1 Endpunkt
+          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=$GEMINI_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
               \"contents\": [{
@@ -43,7 +44,7 @@ jobs:
               }]
             }")
           
-          # 5. Antwort prüfen und extrahieren
+          # 5. Antwort prüfen
           REVIEW_TEXT=$(echo $RESPONSE | jq -r '.candidates[0].content.parts[0].text // empty')
           
           # 6. Kommentar posten
@@ -51,6 +52,9 @@ jobs:
             gh pr comment ${{ github.event.pull_request.number }} --body "### 🤖 KI Code Review
             $REVIEW_TEXT"
           else
-            echo "API Fehler Log: $RESPONSE"
+            # Falls es wieder kracht, lassen wir uns alle verfügbaren Modelle anzeigen
+            echo "API Fehler! Versuche Liste der Modelle zu laden..."
+            curl -s "https://generativelanguage.googleapis.com/v1/models?key=$GEMINI_API_KEY" | jq -r '.models[].name'
+            echo "Vollständiger API Log: $RESPONSE"
             exit 1
           fi
