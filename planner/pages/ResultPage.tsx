@@ -34,11 +34,9 @@ export function ResultPage({
   useEffect(() => {
     if (!edition) return;
 
-    const pokedexes = getPokedexRegion(edition);
+    const pokedexes = getPokedexRegion(edition) || [];
 
     if (!pokedexes || pokedexes.length === 0) {
-      setData(null);
-      setPokemonDetails(null);
       return;
     }
 

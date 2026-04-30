@@ -16,7 +16,10 @@ export function TeamTable({
   const removePokemonFromTeam = (pokemon: Pokemon) => {
     if (editable) {
       const updatedTeam = [...team].filter((teamMember) => teamMember.name !== pokemon.name);
-      setTeam ? setTeam(updatedTeam) : null;
+
+      if (setTeam) {
+        setTeam(updatedTeam);
+      }
     }
   };
 
