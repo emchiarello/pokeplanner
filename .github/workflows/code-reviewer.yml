@@ -1,0 +1,56 @@
+name: AI Code Reviewer
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Groq Review
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Unterschiede im Code holen
+          DIFF=$(git diff origin/${{ github.base_ref }}...origin/${{ github.head_ref }} | head -c 15000)
+          
+          if [ -z "$DIFF" ]; then
+            echo "Keine Änderungen gefunden."
+            exit 0
+          fi
+
+          # 2. Skill-Datei einlesen
+          SKILLS=$(cat .agents/skills/code-reviewer/SKILL.md)
+
+          # 3. Anfrage an Groq (Modell: Llama 3.3 70B - extrem stark und kostenlos)
+          RESPONSE=$(curl -X POST "https://api.groq.com/openai/v1/chat/completions" \
+            -H "Authorization: Bearer $GROQ_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"llama-3.3-70b-versatile\",
+              \"messages\": [
+                {\"role\": \"system\", \"content\": $(echo "Du bist ein erfahrener Code Reviewer. Deine Regeln: $SKILLS" | jq -aRs .)},
+                {\"role\": \"user\", \"content\": $(echo "Reviewe diesen Code-Diff:\n\n$DIFF" | jq -aRs .)}
+              ]
+            }")
+
+          # 4. Antwort extrahieren
+          REVIEW_TEXT=$(echo $RESPONSE | jq -r '.choices[0].message.content // empty')
+
+          # 5. Kommentar im PR posten
+          if [ -n "$REVIEW_TEXT" ] && [ "$REVIEW_TEXT" != "null" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} --body "### 🚀 Groq AI Code Review (Llama 3.3)
+            $REVIEW_TEXT"
+          else
+            echo "Fehler bei Groq API: $RESPONSE"
+            exit 1
+          fi
