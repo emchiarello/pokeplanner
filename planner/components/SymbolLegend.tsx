@@ -1,4 +1,4 @@
-import {ArrowDown, ArrowUp, Minus} from "./CustomIcons.tsx";
+import { ArrowDown, ArrowUp, Minus } from './CustomIcons.tsx';
 
 export function SymbolLegend() {
   return (
@@ -18,5 +18,5 @@ export function SymbolLegend() {
         <span className="text-center">Resistance</span>
       </span>
     </div>
-  )
+  );
 }
