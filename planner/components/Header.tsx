@@ -1,22 +1,40 @@
-import {capitalize, type Pokemon} from "../helpers/helper.ts";
-import type {ChangeEvent} from "react";
-import {TeamTable} from "./TeamTable.tsx";
+import { capitalize, type Pokemon } from '../helpers/helper.ts';
+import type { ChangeEvent } from 'react';
+import { TeamTable } from './TeamTable.tsx';
 
-export function Header({ page, edition, typeFilter, setTypeFilter, team }: { page: string; edition: string; typeFilter: string; setTypeFilter: (typeFilter: string) => void; team: Pokemon[] }) {
+export function Header({
+  page,
+  edition,
+  typeFilter,
+  setTypeFilter,
+  team,
+}: {
+  page: string;
+  edition: string;
+  typeFilter: string;
+  setTypeFilter: (typeFilter: string) => void;
+  team: Pokemon[];
+}) {
   const handleFilterChange = (event: ChangeEvent<HTMLSelectElement>) => {
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior: 'smooth',
     });
     setTypeFilter(event.target.value);
-  }
+  };
 
-	return (
-		<header className="relative z-10 w-full flex justify-center items-center border-b shadow-md shadow-gray-500">
+  return (
+    <header className="relative z-10 w-full flex justify-center items-center border-b shadow-md shadow-gray-500">
       <div className="max-w-[1280px] w-full flex flex-col justify-center items-center gap-4 p-4">
         <h1 className="text-center text-2xl font-bold">{getHeading(page, edition)}</h1>
-        {page === "RESULT" && (
-          <select name="typeSelect" id="typeSelect" className="w-full border rounded-xl px-4 py-2 hover:cursor-pointer" value={typeFilter} onChange={(e) => handleFilterChange(e)}>
+        {page === 'RESULT' && (
+          <select
+            name="typeSelect"
+            id="typeSelect"
+            className="w-full border rounded-xl px-4 py-2 hover:cursor-pointer"
+            value={typeFilter}
+            onChange={(e) => handleFilterChange(e)}
+          >
             <option value="">All Types</option>
             <option value="normal">Normal</option>
             <option value="fighting">Fighting</option>
@@ -38,21 +56,19 @@ export function Header({ page, edition, typeFilter, setTypeFilter, team }: { pag
             <option value="fairy">Fairy</option>
           </select>
         )}
-        {page === "ANALYZE" && (
-          <TeamTable team={team} editable={false} variant="md" />
-        )}
+        {page === 'ANALYZE' && <TeamTable team={team} editable={false} variant="md" />}
       </div>
-		</header>
-	);
+    </header>
+  );
 }
 
 function getHeading(page: string, edition: string | undefined) {
   const HEADING: Record<string, string> = {
-    SEARCH: "Choose a Pokémon Edition",
-    RESULT: `Choose Pokémon from ${edition ? capitalize(edition) : "chosen"} Edition`,
-    ANALYZE: "Team Analysis",
-    SAVE: "Screenshot or Copy"
-  }
+    SEARCH: 'Choose a Pokémon Edition',
+    RESULT: `Choose Pokémon from ${edition ? capitalize(edition) : 'chosen'} Edition`,
+    ANALYZE: 'Team Analysis',
+    SAVE: 'Screenshot or Copy',
+  };
 
   return HEADING[page];
 }
