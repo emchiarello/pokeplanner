@@ -31,12 +31,27 @@ describe('Helper Functions', () => {
 describe('Pokemon Type Colors', () => {
   it('should have color for all 18 pokemon types', () => {
     const expectedTypes = [
-      'normal', 'fighting', 'flying', 'poison', 'ground', 'rock',
-      'bug', 'ghost', 'steel', 'fire', 'water', 'grass',
-      'electric', 'psychic', 'ice', 'dragon', 'dark', 'fairy',
+      'normal',
+      'fighting',
+      'flying',
+      'poison',
+      'ground',
+      'rock',
+      'bug',
+      'ghost',
+      'steel',
+      'fire',
+      'water',
+      'grass',
+      'electric',
+      'psychic',
+      'ice',
+      'dragon',
+      'dark',
+      'fairy',
     ];
 
-    expectedTypes.forEach(type => {
+    expectedTypes.forEach((type) => {
       expect(TYPE_TO_COLOR[type]).toBeDefined();
       expect(TYPE_TO_COLOR[type]).toMatch(/bg-\[#/);
       expect(TYPE_TO_COLOR[type]).toMatch(/border-\[#/);
@@ -79,17 +94,15 @@ describe('Team Management Logic', () => {
     ];
 
     const pokemonToCheck = team[0];
-    const exists = team.some(member => member.name === pokemonToCheck.name);
+    const exists = team.some((member) => member.name === pokemonToCheck.name);
     expect(exists).toBe(true);
   });
 
   it('should correctly identify if pokemon does not exist in team', () => {
-    const team: Pokemon[] = [
-      { name: 'pikachu', typeOne: 'electric', typeTwo: null, sprite: '' },
-    ];
+    const team: Pokemon[] = [{ name: 'pikachu', typeOne: 'electric', typeTwo: null, sprite: '' }];
 
     const newPokemon = { name: 'charmander', typeOne: 'fire', typeTwo: null, sprite: '' };
-    const exists = team.some(member => member.name === newPokemon.name);
+    const exists = team.some((member) => member.name === newPokemon.name);
     expect(exists).toBe(false);
   });
 
@@ -100,19 +113,17 @@ describe('Team Management Logic', () => {
     ];
 
     const pokemonToRemove = team[0];
-    const updatedTeam = team.filter(member => member.name !== pokemonToRemove.name);
+    const updatedTeam = team.filter((member) => member.name !== pokemonToRemove.name);
 
     expect(updatedTeam).toHaveLength(1);
     expect(updatedTeam[0].name).toBe('charizard');
   });
 
   it('should add pokemon to team if below max size (6)', () => {
-    const team: Pokemon[] = [
-      { name: 'pikachu', typeOne: 'electric', typeTwo: null, sprite: '' },
-    ];
+    const team: Pokemon[] = [{ name: 'pikachu', typeOne: 'electric', typeTwo: null, sprite: '' }];
     const newPokemon = { name: 'charizard', typeOne: 'fire', typeTwo: 'flying', sprite: '' };
 
-    const exists = team.some(member => member.name === newPokemon.name);
+    const exists = team.some((member) => member.name === newPokemon.name);
     const teamCopy = [...team];
 
     if (!exists && teamCopy.length < 6) {
@@ -134,7 +145,7 @@ describe('Team Management Logic', () => {
     ];
     const newPokemon = { name: 'p7', typeOne: 'fire', typeTwo: null, sprite: '' };
 
-    const exists = team.some(member => member.name === newPokemon.name);
+    const exists = team.some((member) => member.name === newPokemon.name);
     const teamCopy = [...team];
 
     if (!exists && teamCopy.length < 6) {
@@ -153,8 +164,8 @@ describe('Team Management Logic', () => {
     ];
 
     const typeFilter = 'flying';
-    const filtered = pokemonList.filter(pokemon =>
-      !typeFilter || (pokemon.typeOne === typeFilter || pokemon.typeTwo === typeFilter)
+    const filtered = pokemonList.filter(
+      (pokemon) => !typeFilter || pokemon.typeOne === typeFilter || pokemon.typeTwo === typeFilter,
     );
 
     expect(filtered).toHaveLength(2);
@@ -169,8 +180,8 @@ describe('Team Management Logic', () => {
     ];
 
     const typeFilter = '';
-    const filtered = pokemonList.filter(pokemon =>
-      !typeFilter || (pokemon.typeOne === typeFilter || pokemon.typeTwo === typeFilter)
+    const filtered = pokemonList.filter(
+      (pokemon) => !typeFilter || pokemon.typeOne === typeFilter || pokemon.typeTwo === typeFilter,
     );
 
     expect(filtered).toHaveLength(pokemonList.length);
