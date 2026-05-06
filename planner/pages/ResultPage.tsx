@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import {Card} from "../components/Card.tsx";
 import {type Pokemon} from "../helpers/helper.ts";
 import {Clickable} from "../components/Clickable.tsx";
+import {LoadingSpinner} from "../components/LoadingSpinner.tsx";
 
 type PokemonEntry = {
   entry_number: number;
@@ -20,6 +21,7 @@ export function ResultPage({edition, typeFilter, team, setTeam}: { edition: stri
   const BASE_URL = "https://pokeapi.co/api/v2"
   const [data, setData] = useState<Pokedex[] | null>(null);
   const [pokemonDetails, setPokemonDetails] = useState<Pokemon[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!edition) return;
@@ -31,6 +33,8 @@ export function ResultPage({edition, typeFilter, team, setTeam}: { edition: stri
       setPokemonDetails(null);
       return;
     }
+
+    setIsLoading(true);
 
     Promise.all(
       pokedexes.map((dex) =>
@@ -56,17 +60,19 @@ export function ResultPage({edition, typeFilter, team, setTeam}: { edition: stri
             pokemonList.push({
               name: result.name,
               typeOne: result.types[0].type.name,
-              typeTwo: result.types[1]?.type.name,
+              typeTwo: result.types[1].type.name,
               sprite: result.sprites.front_default,
             });
           }
           setPokemonDetails(pokemonList);
+          setIsLoading(false);
         }
       })
       .catch((err) => {
         console.error("API Fehler:", err);
         setData(null);
         setPokemonDetails(null);
+        setIsLoading(false);
       });
   }, [edition]);
 
@@ -74,7 +80,7 @@ export function ResultPage({edition, typeFilter, team, setTeam}: { edition: stri
 
   const togglePokemonInTeam = (pokemon: Pokemon) => {
     let exist = false;
-    const teamCopy = [...team]
+    const teamCopy = team
 
     for (const teamMember of team) {
       exist = teamMember.name === pokemon.name;
@@ -92,6 +98,8 @@ export function ResultPage({edition, typeFilter, team, setTeam}: { edition: stri
       setTeam(updatedTeam);
     }
   }
+
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4">
