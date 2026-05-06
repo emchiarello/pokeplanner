@@ -1,12 +1,20 @@
-import {Button} from "../components/Button.tsx";
+import { Button } from '../components/Button.tsx';
 
-export default function SearchPage({setPage, edition, setEdition}: {setPage: (page: string) => void; edition: string; setEdition: (search: string) => void;}) {
+export default function SearchPage({
+  setPage,
+  edition,
+  setEdition,
+}: {
+  setPage: (page: string) => void;
+  edition: string;
+  setEdition: (search: string) => void;
+}) {
   const handleEditionChange = (chosenEdition: string) => {
     setEdition(chosenEdition);
-    if (chosenEdition !== "") {
-      setPage("RESULT");
+    if (chosenEdition !== '') {
+      setPage('RESULT');
     }
-  }
+  };
 
   return (
     <form className="flex flex-col items-center gap-4 p-4">
@@ -15,7 +23,8 @@ export default function SearchPage({setPage, edition, setEdition}: {setPage: (pa
         id="editionSelect"
         className="w-full px-4 py-2 border rounded-xl hover:cursor-pointer"
         value={edition}
-        onChange={(e) => handleEditionChange(e.target.value)}>
+        onChange={(e) => handleEditionChange(e.target.value)}
+      >
         <option value="">-</option>
         <option value="red">Red</option>
         <option value="blue">Blue</option>
@@ -45,15 +54,19 @@ export default function SearchPage({setPage, edition, setEdition}: {setPage: (pa
         <option value="moon">Moon</option>
         <option value="ultra_sun">Ultra Sun</option>
         <option value="ultra_moon">Ultra Moon</option>
-      </select
-      >
+      </select>
       <div className="max-w-3/5 w-full">
-        <Button variant={edition === "" ? "primary_disabled" : "primary"} onClick={() => {
-          if (edition !== "") {
-            setPage("RESULT")
-          }
-        }}>Show Pokémon</Button>
+        <Button
+          variant={edition === '' ? 'primary_disabled' : 'primary'}
+          onClick={() => {
+            if (edition !== '') {
+              setPage('RESULT');
+            }
+          }}
+        >
+          Show Pokémon
+        </Button>
       </div>
     </form>
-  )
+  );
 }
